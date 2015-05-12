@@ -1,0 +1,317 @@
+---
+title: "WhiteWineQuality.Rmd"
+author: "Mohammad Key Manesh"
+date: "Tuesday, May 05, 2015"
+output: html_document
+---
+
+## Understanding Dataset and Objective
+
+Wine industry is a lucrative industry which is growing as social drining is on rise. There are many factors that make the taste and quality of wine unique. These factors are but now limited to the followings:
+* acidity
+* pH level
+* sugar remained in wine
+* chlorides
+
+In this project we use a dataset of wines. In this dataset there are 4898 observations of White Wines that are produced in Portugal. Different properties of each wine is tested and collected for this dataset. Also, Each variety of wine is tasted by three independent tasters and the final rank assigned is the median rank given by the tasters.
+
+In this project, I try to understand this dataset better and also try to find if there is a relationship between quality of wine and different properties of it.
+
+
+## EDA
+
+
+
+```{r include=FALSE}
+require(ggplot2)
+require(GGally)
+require(rpart)
+require(rpart.plot)
+require(grid)
+wine = read.csv("wineQualityWhites.csv")
+
+```
+
+Initially we start just looking at data to understand ther features better.
+
+```{r echo=FALSE}
+str(wine)
+
+```
+
+As above figure shows, there are 4898 observations and 12 features. Chemical features which consist of 11 features and quality of a wine.
+
+Below is brief description and measure unit for the features:
+Input variables (based on physicochemical tests):
+
+Chemical Prperties:
+* fixed acidity: most acids involved with wine or fixed or nonvolatile (do not evaporate readily) (tartaric acid - g / dm^3)
+* volatile acidity: the amount of acetic acid in wine, which at too high of levels can lead to an unpleasant, vinegar taste (acetic acid - g / dm^3)
+* citric acid: found in small quantities, citric acid can add 'freshness' and flavor to wines (g / dm^3)
+* residual sugar: the amount of sugar remaining after fermentation stops (g / dm^3)
+* chlorides: the amount of salt in the wine (sodium chloride - g / dm^3
+* free sulfur dioxide: he free form of SO2 exists in equilibrium between molecular SO2 (as a dissolved gas) and bisulfite ion (mg / dm^3)
+* total sulfur dioxide: amount of free and bound forms of S02 (mg / dm^3)
+* density: the density of water is close to that of water depending on the percent alcohol and sugar content (g / cm^3)
+* pH: describes how acidic or basic a wine is on a scale from 0 (very acidic) to 14 (very basic)
+* sulphates: a wine additive which can contribute to sulfur dioxide gas (S02) levels (potassium sulphate - g / dm3)
+* alcohol: the percent alcohol content of the wine (% by volume)
+
+Output variable (based on sensory data): 
+* quality (score between 0 and 10)
+
+
+Summary of data:
+```{r echo=FALSE }
+summary(wine)
+
+```
+Above figure shows the distribution of data over different variables. As we can see, the normal range for fixed acidity is 6.3 to 7.3 g / dm^3. As for sugar, 75% of wines in our dataset have below 9.9 mg / dm^3 sugar remaining after fermentation stops. Average alcohol percentage in our dataset is about 10.51. 
+
+
+
+### Some plotings:
+
+#### Distribution of data: Quality of Wine
+
+Boxplot of wine quality:
+```{r echo=FALSE}
+boxplot(wine[,13])
+
+```
+
+
+Histogram of wine quality:
+```{r echo=FALSE}
+ggplot(data = wine, aes(x = wine$quality)) + 
+  geom_histogram()
+
+```
+In above figures we can see that for most of the wine in our dataset, quality falls between 5 and 7 which is a range for good wines. There are couple of exceptions as excellent wine(8 or above), and poor (4 or below)
+
+
+#### Distribution of data: Wine Acidity
+```{r echo=FALSE, warning=FALSE}
+
+g1 = ggplot(data = wine, aes(x=wine$fixed.acidity)) +  
+  geom_histogram() 
+  
+g2 = ggplot(data = wine, aes(x=wine$volatile.acidity)) +
+  geom_histogram()
+  
+g3 = ggplot(data = wine, aes(x=wine$citric.acid)) +
+  geom_histogram()
+
+g4 = ggplot(data = wine, aes(x=wine$pH)) +
+  geom_histogram()
+
+grid.newpage() 
+pushViewport(viewport(layout = grid.layout(2, 2))) 
+ 
+print(g1, vp = vplayout(1, 1)) 
+print(g2, vp = vplayout(1, 2))
+print(g3, vp = vplayout(2, 1))
+print(g4, vp = vplayout(2, 2))
+
+```
+
+Based on the bottom-right figure, wines are acidic and their pH are ranging from 2.5 to 4 and most of them are in fact between 3 and 3.5. 
+
+Acidic nature of wines can come from three different types of acids:
+
+1- Fixid acidity which is for most cases between 6 and 8.
+
+2- Volatile Acidity which is mostly in range of .1 and .5
+
+3- Citric Acidity which is ranging from 0 to 1 but for most of wines in our dataset is between .2 and .5
+
+These features all seem to follow a normal distribution. 
+
+
+#### Distribution of data: Density, Chlorides, Sugar and Alcohol Percentage
+
+```{r echo=FALSE, warning=FALSE}
+
+g1 = ggplot(data = wine, aes(x=wine$chlorides)) +  
+  geom_histogram() 
+  
+g2 = ggplot(data = wine, aes(x=wine$residual.sugar)) +
+  geom_histogram()
+  
+g3 = ggplot(data = wine, aes(x=wine$density)) +
+  geom_histogram()
+
+g4 = ggplot(data = wine, aes(x=wine$alcohol)) +
+  geom_histogram()
+
+grid.newpage() 
+pushViewport(viewport(layout = grid.layout(2, 2))) 
+ 
+print(g1, vp = vplayout(1, 1)) 
+print(g2, vp = vplayout(1, 2))
+print(g3, vp = vplayout(2, 1))
+print(g4, vp = vplayout(2, 2))
+
+```
+Based on the above figures, chlorides range in wines in our dataset is usually between 0 and .1 with some exceptions more than .1 g/dm3. 
+
+The amount of sugar remained after fermentation is rarely more than 20 g/dm^3.
+
+Density for wine are typically less than water but very slightly. The typical range for density would be (.99, 1)
+
+Alcohol percentage in wine is varied between 8 and 14, however for most of the wines it is between 9 and 13.
+
+#### Role of pH and Alcohol in Quality of the wine
+
+Now I'd like to investigate impact of Alcohol and pH in wine quality.
+
+```{r echo=FALSE}
+ggplot(data= wine, aes(x = wine$alcohol, y = wine$pH, color = quality)) + 
+  geom_point()
+
+```
+
+It is difficult to find specific pattern in this figure since quality has a wide range. I will limit the quality of wine into three categories of Poor, Good and Great to be able to differntiate patterns in each category. 
+
+
+```{r include=FALSE}
+wine$rating[5 > wine$quality ] = "Poor"
+wine$rating[5<= wine$quality & wine$quality < 7] = "Good"
+wine$rating[7<= wine$quality ] = "Great"
+wine$rating = as.factor(wine$rating)
+
+```
+
+below is how the quality of wines is distributed based on the rating that I just introduced:
+
+```{r echo=FALSE}
+ggplot(data = wine, aes(x = wine$rating)) + 
+  geom_bar()
+
+```
+
+
+Now again we plot the two features of pH and Alcohol but this time use the new rating to see a pattern between quality and these two features:
+
+
+```{r echo=FALSE}
+ggplot(data= wine, aes(x = wine$alcohol, y = wine$pH, color = rating)) + 
+  geom_point()
+
+```
+
+
+According to the above scatter plot, most of great wines are in the right side of the plot. More specifically, if the alcohol percentage is above 11% there seems to be a good chance that we will have a good or great wine (great wine has rating 7 or above, good ones has quality above 5). If it is more than 12% the chance is even higher.
+
+
+#### Relationship between density and alcohol percentage
+```{r echo=FALSE}
+ggplot(data = wine, aes(x = wine$alcohol, y = wine$density, color = rating)) + 
+  geom_point()
+
+```
+There seems to be a correlation between density and alcohol percentage. Less dense, more alcohol. Also, great wines tend to be less dense.
+
+
+#### Relationship between Quality and Chlorides
+```{r echo=FALSE}
+ggplot(data = wine, aes(x = wine$pH, y = wine$chlorides, color = rating)) + 
+  geom_point() + 
+  coord_cartesian(ylim = c(0,.1))
+
+```
+Wines with better quality tend to have less chlorides. If the chlorides level is higher than 0.050, there is a good chance the wine has worse rating.
+
+
+#### Relationship between Quality and the rest of the features 
+
+
+```{r echo=FALSE}
+cor(wine[,2:12], wine$quality)
+
+```
+
+This also shows that wine quality has positive correlation with alcohol and negative correlation with chlorides and density
+
+
+#### Distribution and Correlation in the dataset 
+
+following diagrams give us a good sense of the distribution and correlation in our dataset:
+
+```{r echo=FALSE}
+ggpairs(wine, 2:12)
+
+```
+
+some observations:
+* Positive relationship between density and sugar remaining 
+* Positive relationship between total SO2 and free SO2 
+* Positive relationship between total SO2 and chlorides
+* Positive relationship between alcohol and density
+* Features in our data seems to follow a normal distribution with some skewed toward right
+
+
+##Final Plots and Summary
+
+#### Histogram of Wine Quality:
+```{r echo=FALSE}
+ ggplot(data=wine, aes(wine$quality)) + 
+  geom_histogram(color = I('black'),fill = I('#980043')) + 
+  xlab("Wine Quality")
+```
+ 
+#### Histogram of Alcohol Percentage:
+
+```{r echo=FALSE}
+ggplot(data = wine, aes(wine$alcohol)) + 
+  geom_histogram(binwidth=.3, aes(fill = ..count..)) + 
+  xlab("Alcohol Percentage") + ylab("Count") + 
+  ggtitle("Histogram of Alcohol Percentage") + 
+  scale_fill_gradient("Count", low = "pink", high = I('#980043'))
+
+```
+
+
+#### Is there any relationship between Alcohol percentage and Wine Density? Do these features impact wine rating?
+
+```{r echo=FALSE}
+ggplot(data = wine, aes(x = wine$alcohol, y = wine$density,color = rating)) + 
+  geom_point() + 
+  xlab("Alcohol Percentage") + ylab("Wine Density") + 
+  coord_cartesian(ylim = c(.987,1.003)) +
+  ggtitle("Wine Density and Alcohol Percentage for Different Category of Wine Rating")
+```
+
+Decision Tree to predict Alcohol Quality:
+
+```{r echo=FALSE}
+m3 = rpart(quality ~ . -X -rating, data = wine, method="class", cp = 0.0045)
+prp(m3)
+
+```
+
+## Reflection
+Based on the EDA and further analysis that I did for this dataset, I am convinced that Alcohil percentage is the most important factor to decide the quality of White wine. One important factor that contributes to Alcohol percentage is the remaining sugar in wine after fermentation so that the more sugar left after fermentation, the less the percentage of alcohol will be in the wine.
+
+Other important factors for deciding the quality of a white wine are SO2 and Volatile Acidity. Free SO2 has positive relationship with the quality of white wine while Volatile Acidity has negative one! 
+
+
+
+
+##Reference
+1. Data is taken from the following source:
+
+P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. 
+
+  Modeling wine preferences by data mining from physicochemical properties.
+  In Decision Support Systems, Elsevier, 47(4):547-553. ISSN: 0167-9236.
+
+  Available at: 
+  [@Elsevier] http://dx.doi.org/10.1016/j.dss.2009.05.016
+  
+  [Pre-press (pdf)] http://www3.dsi.uminho.pt/pcortez/winequality09.pdf
+            
+  [bib] http://www3.dsi.uminho.pt/pcortez/dss09.bib
+
+2. https://s3.amazonaws.com/udacity-hosted-downloads/ud651/wineQualityInfo.txt
+3. https://onlinecourses.science.psu.edu/stat857/node/223
