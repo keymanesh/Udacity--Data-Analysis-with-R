@@ -19,7 +19,7 @@ Wine industry is a lucrative industry which is growing as social drining is on r
 
 In this project we use a dataset of wines. In this dataset there are 4898 observations of White Wines that are produced in Portugal. Different properties of each wine is tested and collected for this dataset. Also, Each variety of wine is tasted by three independent tasters and the final rank assigned is the median rank given by the tasters.
 
-In this project, I try to understand this dataset better and also try to find if there is a relationship between quality of wine and different properties of it.
+In this project, I try to understand this dataset better and also try to find out if there is a relationship between quality of wine and different properties of it.
 
 
 ## EDA
@@ -30,21 +30,27 @@ require(GGally)
 require(rpart)
 require(rpart.plot)
 require(grid)
+require(nnet)
+require(randomForest)
 
 wine = read.csv(".//data//wineQualityWhites.csv")
 
+
 ```
 
-Initially we start just looking at data to understand ther features better.
+
+### Structure of dataset
+
+Initially we start just looking at data to understand their features better.
 
 ```{r echo=FALSE}
 str(wine)
 
 ```
 
-As above figure shows, there are 4898 observations and 12 features. Chemical features which consist of 11 features and quality of a wine.
+There are 4898 observations and 12 features. Input variables which includes 11 chemical features of white wine and output variable which is wine quality.
 
-Below is brief description and measure unit for the features:
+Below is brief description of each feature:
 Input variables (based on physicochemical tests):
 
 Chemical Prperties:
@@ -77,7 +83,7 @@ Output variable (based on sensory data):
 * quality (score between 0 and 10)
 
 
-Summary of data:
+### Summary of dataset:
 
 ```{r echo=FALSE }
 summary(wine)
@@ -108,7 +114,7 @@ ggplot(data = wine, aes(x = wine$quality)) +
 
 ```
 
-In above figures we can see that for most of the wine in our dataset, quality falls between 5 and 7 which is a range for good wines. There are couple of exceptions as excellent wine(8 or above), and poor (4 or below)
+For most of the wine in our dataset, quality falls between 5 and 7 which is a range for good wines. There are couple of exceptions as excellent wine(8 or above), and poor (4 or below)
 
 
 #### Distribution of data: Wine Acidity
@@ -139,7 +145,7 @@ print(g4, vp = vplayout(2, 2))
 
 ```
 
-Based on the bottom-right figure, wines are acidic and their pH are ranging from 2.5 to 4 and most of them are in fact between 3 and 3.5. 
+Based on the bottom-right figure, wines are acidic and their pH are ranging from 2.5 to 4, however, most of wine have pH between 3 and 3.5. 
 
 Acidic nature of wines can come from three different types of acids:
 
@@ -149,7 +155,24 @@ Acidic nature of wines can come from three different types of acids:
 
 3- Citric Acidity which is ranging from 0 to 1 but for most of wines in our dataset is between .2 and .5
 
-These features all seem to follow a normal distribution. 
+These features all seem to follow a normal distribution except Volatile Acidity which is slightly right skewed. 
+
+I will do log transformations to see if the result would be more bell-shaped:
+
+```{r echo=FALSE}
+ggplot(data = wine, aes(x=wine$volatile.acidity)) +
+  geom_histogram() +
+  scale_x_log10()
+
+```
+
+It seems that log(volatile acidity) follows normal distribution (at least it is more like bell-shaped in logorithmic than regular); therefore we will use the logarithmic transofomation for our further analysis
+
+```{r include=FALSE}
+wine$volatile.acidity = log(wine$volatile.acidity)
+
+```
+
 
 
 #### Distribution of data: Density, Chlorides, Sugar and Alcohol Percentage
@@ -178,18 +201,89 @@ print(g4, vp = vplayout(2, 2))
 
 ```
 
-Based on the above figures, chlorides range in wines in our dataset is usually between 0 and .1 with some exceptions more than .1 g/dm3. 
+Based on the above figures, chlorides range in wines in our dataset is usually between 0 and .1 with some exceptions more than .1 g/dm^3. 
 
 The amount of sugar remained after fermentation is rarely more than 20 g/dm^3.
 
 Density for wine are typically less than water but very slightly. The typical range for density would be (.99, 1)
 
-Alcohol percentage in wine is varied between 8 and 14, however for most of the wines it is between 9 and 13.
+Alcohol percentage in wine is varies between 8 and 14, however for most of the wines it is between 9 and 13.
 
+Residual Sugar and Chlorides are highly right skewed. We will do logorithmic transformation in the next step:
+
+```{r echo=FALSE, warning=FALSE}
+
+g1 = ggplot(data = wine, aes(x=wine$chlorides)) +  
+  geom_histogram() +
+    scale_x_log10()
+  
+g2 = ggplot(data = wine, aes(x=wine$residual.sugar)) +
+  geom_histogram() +
+    scale_x_log10() +
+    scale_x_log10()
+  
+
+grid.newpage() 
+pushViewport(viewport(layout = grid.layout(1, 2))) 
+ 
+print(g1, vp = vplayout(1, 1)) 
+print(g2, vp = vplayout(1, 2))
+
+
+```
+
+Now these two are more like bell-shaped. However, still Residual sugar is far from normal distribution as it seems like two different bell in the distribution.
+
+
+```{r include=FALSE}
+wine$residual.sugar = log(wine$residual.sugar)
+wine$chlorides = log(wine$chlorides)
+
+```
+
+
+#### Analyzing Correlation among input variables in the dataset 
+
+following diagrams give us a good sense of the distribution and correlation among input variables in our dataset:
+
+```{r echo=FALSE, warning=FALSE}
+wine_tmp = wine[,2:12]
+colnames(wine_tmp) = c("Fix.A", "Vol.A", "Citric", "Sugar", "CI", 
+                              "Free.SO2", "SO2", "Density", "pH", "SO4", "Alc")
+ggpairs(wine_tmp,  params=list(size=4)) + 
+  theme(axis.text = element_blank())
+
+rm(wine_tmp)
+
+```
+
+some observations:
+* Positive relationship between density and sugar remaining 
+* Positive relationship between total SO2 and free SO2 
+* Positive relationship between total SO2 and chlorides
+* Positive relationship between alcohol and density
+* Features in our data seems to follow a normal distribution
+
+To avoid multicollinearity in model building using regressions, we have to be aware of strong correlations among input variables.
+
+#### Analyzing correlation between Quality and input variables
+
+We use Spearman's rho statistic to estimate a rank-based measure of association. Correlations falls between -1 and 1. 0 suggests there is no association between the two variables while numbers close to -1 or 1 suggests strong negative and positive associations accordingly.
+
+
+```{r echo=FALSE, warning=FALSE}
+cor(wine[,2:12], wine$quality)
+
+```
+
+This also shows that wine quality has positive correlation with alcohol and negative correlation with chlorides and density
+
+
+Now I will dig into relationship between wine quality and its properties more to be able to predict the quality of wine.
 
 #### Role of pH and Alcohol in Quality of the wine
 
-Now I'd like to investigate impact of Alcohol and pH in wine quality.
+What is impact of Alcohol and pH in wine quality?
 
 ```{r echo=FALSE, warning=FALSE}
 ggplot(data= wine, aes(x = wine$alcohol, y = wine$pH, color = quality)) + 
@@ -205,6 +299,8 @@ wine$rating[5 >= wine$quality ] = "Poor"
 wine$rating[5< wine$quality & wine$quality < 7] = "Good"
 wine$rating[7<= wine$quality ] = "Great"
 wine$rating = as.factor(wine$rating)
+
+wine$rating = relevel(wine$rating, "Poor")
 
 ```
 
@@ -278,46 +374,172 @@ ggplot(data = wine, aes(x = wine$pH, y = wine$chlorides, color = rating)) +
 Wines with better quality tend to have less chlorides. If the chlorides level is higher than 0.050, there is a good chance the wine has worse rating.
 
 
-#### Relationship between Quality and the rest of the features 
+### Predicting Wine Quality
 
+Using the insights that we have now about our data, I will try to predict the quality of wine.
 
-```{r echo=FALSE, warning=FALSE}
-cor(wine[,2:12], wine$quality)
+I will use three levels rating ("Poor", "Good", "Great") as an output variable.
 
-```
-
-This also shows that wine quality has positive correlation with alcohol and negative correlation with chlorides and density
-
-
-#### Distribution and Correlation in the dataset 
-
-following diagrams give us a good sense of the distribution and correlation in our dataset:
-
-```{r echo=FALSE, warning=FALSE}
-wine_tmp = wine[,2:12]
-colnames(wine_tmp) = c("Fix.A", "Vol.A", "Citric", "Sugar", "CI", 
-                              "Free.SO2", "SO2", "Density", "pH", "SO4", "Alc")
-ggpairs(wine_tmp,  params=list(size=4)) + 
-  theme(axis.text = element_blank())
-
-rm(wine_tmp)
+```{r}
+table(wine$rating)
 
 ```
 
-some observations:
-* Positive relationship between density and sugar remaining 
-* Positive relationship between total SO2 and free SO2 
-* Positive relationship between total SO2 and chlorides
-* Positive relationship between alcohol and density
-* Features in our data seems to follow a normal distribution with some skewed toward right
+This is the baseline for accuracy of our model:
 
+2198/ (1640 + 2198 + 1060) = 0.44
+
+
+#### Multinomial Logistic Regression
+
+I will use multinomial logistic regression to classify ratings of wine.
+
+
+In our earlier analysis we found that there is a strong relationship between wine quality and its alcohol percentage. Lets predict the rating of wine just based on its alcohol percentage.
+
+
+```{r include=FALSE}
+
+model_mglm = multinom(rating ~ alcohol, data = wine)
+pred_mglm = predict(model_mglm)
+
+```
+
+Here is the prediction:
+
+```{r echo=FALSE}
+table(wine$rating,pred_mglm)
+
+```
+
+Accuracy = (918+1336+313)/total = 0.52
+
+AIC: 9211.864 
+
+We can see that just by using one variable, we could improve the baseline accuracy significantly.
+
+In the next step we will add more variables to our model to imporve its accuracy. Based on EDA section Density, Chlorides and Volatile Acidity have strong correlation with wine quality. However, since Density and chlorides have strong association with alcohol percentage we ignore this variable to avoid multicollinearity. In our next model we predict the rating of a wine based on its alcohol percentage, chlorides and volitile acidity:
+
+
+```{r include=FALSE}
+
+model_mglm = multinom(rating ~ alcohol +  volatile.acidity, data = wine)
+pred_mglm = predict(model_mglm)
+
+```
+
+Here is the prediction:
+
+```{r echo=FALSE}
+table(wine$rating,pred_mglm)
+
+```
+
+Accuracy = (972+1404+313)/total = 0.55
+
+AIC: 8838.35 
+
+As expected the accuracy imporved significantly. 
+
+Last step is just to use full model (all inputs) to predict quality of wine. 
+
+```{r include=FALSE}
+
+model_mglm = multinom(rating ~ . -quality -X , data = wine)
+pred_mglm = predict(model_mglm)
+
+```
+
+Prediction:
+
+```{r echo=FALSE}
+table(wine$rating,pred_mglm)
+
+```
+
+Accuracy: (946 + 1495 + 369)/ total = 0.58
+
+AIC: 8602.719 
+
+As you can see, we added 8 more variables to our model and accuracy imporved 3% which suggests that whether combination of other variables are not really impactful in predicting the output or our model is not leveraging the data well (perhaps because there multicollinearity, or the relationship between the input and output is not linear or etc.)
+
+Also we can compare the Akaike information criterion (AIC) for the three models and we can see that from the first model to the second one the AIC improved significantly but from the second model to the full model it improved slightly.
+
+
+#### Decision Tree
+
+Using Decision Trees to predict Alcohol Quality:
+
+```{r echo=FALSE, warning=FALSE}
+model_CART = rpart(rating ~ . -X -quality, data = wine, method="class")
+prp(model_CART)
+
+pred_CART = predict(model_CART, type="class")
+
+```
+
+As we see in the tree, the wine is predicted to be *Great* if its alcohol percentage is 13% or higher. It is predicted as *Poor* if alcohol percentage is below 11% and its log(volatile acidity) is equal or greater than -1.4.
+
+Here is the confusion matrix based on this model:
+
+```{r echo=FALSE}
+
+table(wine$rating, pred_CART)
+
+```
+
+Accuracy = (983+1514+222)/total = 0.56
+
+This is a very effective and readable model. We just used two of input variables to predict the quality. For the next model, we make it more complicated:
+
+
+```{r echo=FALSE, warning=FALSE}
+model_CART = rpart(rating ~ . -X -quality, data = wine, method="class", cp=.008)
+prp(model_CART)
+
+pred_CART = predict(model_CART, type="class")
+
+```
+
+In above model we used following variables to predict quality: alcohol, free sulfur dioxide, pH, sulphate and volatile acidity. 
+
+Now let's see the confusion matrix:
+
+```{r echo=FALSE}
+table(wine$rating, pred_CART)
+```
+
+Accuracy = (868+1651+310)/total = 0.58
+
+This is the best accuracy that we could achieve so far
+
+#### Random Forest
+
+As out last model we will use random forest classification to predict quality of wine.
+
+```{r echo=FALSE, warning=FALSE}
+model_RF = randomForest(rating ~ . -X -quality, data=wine)
+
+pred_RF = predict(model_RF)
+
+```
+
+Now let's see the confusion matrix:
+
+```{r echo=FALSE}
+table(wine$rating, pred_RF)
+```
+
+Accuracy ~ 0.75
+
+Well!! The accuracy imporved amaingly! But does it mean that it is the best model to predict wine quality? I will discuss this in last section of the project when I will suggest future analysis.
 
 ##Final Plots and Summary
 
 #### Histogram of Wine Quality:
 
 ```{r echo=FALSE, warning=FALSE}
- ggplot(data=wine, aes(wine$quality)) + 
+ ggplot(data=wine, aes(x = as.factor(quality))) + 
   geom_histogram(color = I('black'),fill = I('#980043')) + 
   xlab("Wine Quality")
 ```
@@ -325,7 +547,7 @@ some observations:
 #### Histogram of Alcohol Percentage:
 
 ```{r echo=FALSE, warning=FALSE}
-ggplot(data = wine, aes(wine$alcohol)) + 
+ggplot(data = wine, aes(alcohol)) + 
   geom_histogram(binwidth=.3, aes(fill = ..count..)) + 
   xlab("Alcohol Percentage") + ylab("Count") + 
   ggtitle("Histogram of Alcohol Percentage") + 
@@ -344,24 +566,27 @@ ggplot(data = wine, aes(x = wine$alcohol, y = wine$density,color = rating)) +
   ggtitle("Wine Density and Alcohol Percentage for Different Category of Wine Rating")
 ```
 
-Decision Tree to predict Alcohol Quality:
-
-```{r echo=FALSE, warning=FALSE}
-m3 = rpart(quality ~ ., data = wine[,2:13], method="class", cp = 0.0045)
-prp(m3)
-
-```
 
 
 ## Reflection
-Based on the EDA and further analysis that I did for this dataset, I am convinced that Alcohil percentage is the most important factor to decide the quality of White wine. One important factor that contributes to Alcohol percentage is the remaining sugar in wine after fermentation so that the more sugar left after fermentation, the less the percentage of alcohol will be in the wine.
+
+Based on the EDA and further analysis that I did for this dataset, I am convinced that Alcohl percentage is the most important factor to decide the quality of White wine. One important factor that contributes to Alcohol percentage is the remaining sugar in wine after fermentation so that the more sugar left after fermentation, the less the percentage of alcohol will be in the wine.
 
 Other important factors for deciding the quality of a white wine are SO2 and Volatile Acidity. Free SO2 has positive relationship with the quality of white wine while Volatile Acidity has negative one! 
 
 
+## Future Analysis
+
+There is defenitely a great room to do further analysis and come with better models. Below is some ideas to make this study even better:
+
+* In this project the models were evaluated using the same data that was trained. This is not recommended. Performance should be reported based on the seperate set of data. Therefore, for future studies I recommend to split data into train and test and then do the analysis.
+
+* In the last model, we used Random Forest Classification which is very prone to over-fitting. Using seperate train and test data would help to report right number for performance. Also we can use Cross Validation to adjust the parameters of the classification method.
+
+* The only crriteria we used for perfomance was accuracy. While it is indicative of our model's performance, it is not exhaustive yet. A better idea would be to look at the prediction and see how was the prediction are from actual data. For example if a Great wine is predicted as Good, it is more tolerable than if it is predicted as Poor. Therefore we can use weighted accuracy measures to report on performance.
 
 
-##Reference
+##References
 
 1. Data is taken from the following source:
 
@@ -380,5 +605,6 @@ P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
 2. https://s3.amazonaws.com/udacity-hosted-downloads/ud651/wineQualityInfo.txt
 
 3. https://onlinecourses.science.psu.edu/stat857/node/223
+
 
 
