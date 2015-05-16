@@ -128,19 +128,19 @@ Above figure shows the distribution of data over different variables. As we can 
 
 Boxplot of wine quality:
 
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-41-1.png" title="" alt="" width="672" />
 
 
 Histogram of wine quality:
 
-![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-42-1.png" title="" alt="" width="672" />
 
 For most of the wine in our dataset, quality falls between 5 and 7 which is a range for good wines. There are couple of exceptions as excellent wine(8 or above), and poor (4 or below)
 
 
 #### Distribution of data: Wine Acidity
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-43-1.png" title="" alt="" width="672" />
 
 Based on the bottom-right figure, wines are acidic and their pH are ranging from 2.5 to 4, however, most of wine have pH between 3 and 3.5. 
 
@@ -156,7 +156,7 @@ These features all seem to follow a normal distribution except Volatile Acidity 
 
 I will do log transformations to see if the result would be more bell-shaped:
 
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-44-1.png" title="" alt="" width="672" />
 
 It seems that log(volatile acidity) follows normal distribution (at least it is more like bell-shaped in logorithmic than regular); therefore we will use the logarithmic transofomation for our further analysis
 
@@ -166,7 +166,7 @@ It seems that log(volatile acidity) follows normal distribution (at least it is 
 
 #### Distribution of data: Density, Chlorides, Sugar and Alcohol Percentage
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-46-1.png" title="" alt="" width="672" />
 
 Based on the above figures, chlorides range in wines in our dataset is usually between 0 and .1 with some exceptions more than .1 g/dm^3. 
 
@@ -183,7 +183,7 @@ Residual Sugar and Chlorides are highly right skewed. We will do logorithmic tra
 ## Scale for 'x' is already present. Adding another scale for 'x', which will replace the existing scale.
 ```
 
-![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-47-1.png" title="" alt="" width="672" />
 
 Now these two are more like bell-shaped. However, still Residual sugar is far from normal distribution as it seems like two different bell in the distribution.
 
@@ -195,7 +195,7 @@ Now these two are more like bell-shaped. However, still Residual sugar is far fr
 
 following diagrams give us a good sense of the distribution and correlation among input variables in our dataset:
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-49-1.png" title="" alt="" width="672" />
 
 some observations:
 * Positive relationship between density and sugar remaining 
@@ -236,7 +236,7 @@ Now I will dig into relationship between wine quality and its properties more to
 
 What is impact of Alcohol and pH in wine quality?
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-51-1.png" title="" alt="" width="672" />
 
 It is difficult to find specific pattern in this figure since quality has a wide range. I will limit the quality of wine into three categories of Poor, Good and Great to be able to differntiate patterns in each category. 
 
@@ -245,13 +245,13 @@ It is difficult to find specific pattern in this figure since quality has a wide
 
 below is how the quality of wines is distributed based on the rating that I just introduced:
 
-![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-53-1.png" title="" alt="" width="672" />
 
 
 Now again we plot the two features of pH and Alcohol but this time use the new rating to see a pattern between quality and these two features:
 
 
-![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-54-1.png" title="" alt="" width="672" />
 
 
 According to the above scatter plot, there seems to be a relationship between alcohol percentage and rating of the wine. most of great wines are in the right side of the plot. More specifically, if the alcohol percentage is above 11% there seems to be a good chance that we will have a good or great wine (great wine has rating 7 or above, good ones has quality above 5). If it is more than 12% the chance is even higher.
@@ -259,7 +259,7 @@ According to the above scatter plot, there seems to be a relationship between al
 However, to see the relationship better, in below chart I use only Alcohol and Quality to find out if there is actually a relationship between the two.
 
 
-![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-55-1.png" title="" alt="" width="672" />
 
 As you can see in the above stacked bar, for the higher quality wines there is more chance that the wine has higher alcohol percentage.
 
@@ -273,14 +273,14 @@ Here is how I categorized the alchol percentage:
 
 #### Relationship between density and alcohol percentage
 
-![plot of chunk unnamed-chunk-19](figure/unnamed-chunk-19-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-56-1.png" title="" alt="" width="672" />
 
 There seems to be a correlation between density and alcohol percentage. Less dense, more alcohol. Also, great wines tend to be less dense.
 
 
 #### Relationship between Quality and Chlorides
 
-![plot of chunk unnamed-chunk-20](figure/unnamed-chunk-20-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-57-1.png" title="" alt="" width="672" />
 
 Wines with better quality tend to have less chlorides. If the chlorides level is higher than 0.050, there is a good chance the wine has worse rating.
 
@@ -384,7 +384,7 @@ Also we can compare the Akaike information criterion (AIC) for the three models 
 
 Using Decision Trees to predict Alcohol Quality:
 
-![plot of chunk unnamed-chunk-28](figure/unnamed-chunk-28-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-65-1.png" title="" alt="" width="672" />
 
 As we see in the tree, the wine is predicted to be *Great* if its alcohol percentage is 13% or higher. It is predicted as *Poor* if alcohol percentage is below 11% and its log(volatile acidity) is equal or greater than -1.4.
 
@@ -404,7 +404,7 @@ Accuracy = (983+1514+222)/total = 0.56
 This is a very effective and readable model. We just used two of input variables to predict the quality. For the next model, we make it more complicated:
 
 
-![plot of chunk unnamed-chunk-30](figure/unnamed-chunk-30-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-67-1.png" title="" alt="" width="672" />
 
 In above model we used following variables to predict quality: alcohol, free sulfur dioxide, pH, sulphate and volatile acidity. 
 
@@ -435,9 +435,9 @@ Now let's see the confusion matrix:
 ```
 ##        pred_RF
 ##         Poor Good Great
-##   Poor  1221  399    20
-##   Good   300 1734   164
-##   Great   21  329   710
+##   Poor  1237  386    17
+##   Good   293 1744   161
+##   Great   21  335   704
 ```
 
 Accuracy ~ 0.75
@@ -448,16 +448,16 @@ Well!! The accuracy imporved amaingly! But does it mean that it is the best mode
 
 #### Histogram of Wine Quality:
 
-![plot of chunk unnamed-chunk-34](figure/unnamed-chunk-34-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-71-1.png" title="" alt="" width="672" />
  
 #### Histogram of Alcohol Percentage:
 
-![plot of chunk unnamed-chunk-35](figure/unnamed-chunk-35-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-72-1.png" title="" alt="" width="672" />
 
 
 #### Is there any relationship between Alcohol percentage and Wine Density? Do these features impact wine rating?
 
-![plot of chunk unnamed-chunk-36](figure/unnamed-chunk-36-1.png) 
+<img src="WhiteWineQuality_files/figure-html/unnamed-chunk-73-1.png" title="" alt="" width="672" />
 
 
 
@@ -498,6 +498,4 @@ P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
 2. https://s3.amazonaws.com/udacity-hosted-downloads/ud651/wineQualityInfo.txt
 
 3. https://onlinecourses.science.psu.edu/stat857/node/223
-
-
 

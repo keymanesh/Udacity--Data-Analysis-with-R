@@ -109,7 +109,7 @@ boxplot(wine[,13])
 Histogram of wine quality:
 
 ```{r echo=FALSE}
-ggplot(data = wine, aes(x = wine$quality)) + 
+ggplot(data = wine, aes(x = as.factor(wine$quality))) + 
   geom_histogram()
 
 ```
@@ -336,8 +336,8 @@ wine$alcoholLabel[12<= wine$alcohol ] = "Strong"
 wine$alcoholLabel = as.factor(wine$alcoholLabel)
 
 
-ggplot(data= wine, aes(wine$quality , fill = wine$alcoholLabel)) + 
-  geom_bar()
+ggplot(data= wine, aes(x=as.factor(wine$quality) , fill = wine$alcoholLabel)) + 
+  geom_histogram()
 
 ```
 
@@ -366,8 +366,9 @@ There seems to be a correlation between density and alcohol percentage. Less den
 
 ```{r echo=FALSE, warning=FALSE}
 ggplot(data = wine, aes(x = wine$pH, y = wine$chlorides, color = rating)) + 
-  geom_point() + 
-  coord_cartesian(ylim = c(0,.1))
+  geom_point() +
+  coord_cartesian(ylim = c(-4,-2))
+  
 
 ```
 
@@ -607,4 +608,13 @@ P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
 3. https://onlinecourses.science.psu.edu/stat857/node/223
 
 
+```{r include=FALSE}
 
+require(knitr)
+require(markdown)
+#transform the .Rmd to a markdown (.md) file.
+knit('WhiteWineQuality.Rmd')
+
+   file.rename(from="WhiteWineQuality.md", 
+               to="README.md")
+```
