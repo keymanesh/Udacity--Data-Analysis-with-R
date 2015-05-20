@@ -366,9 +366,9 @@ Prediction:
 ```
 ##        pred_mglm
 ##         Poor Good Great
-##   Poor   993  625    22
-##   Good   487 1480   231
-##   Great   53  643   364
+##   Poor   996  612    32
+##   Good   485 1468   245
+##   Great   55  630   375
 ```
 
 Accuracy: (946 + 1495 + 369)/ total = 0.58
@@ -435,9 +435,9 @@ Now let's see the confusion matrix:
 ```
 ##        pred_RF
 ##         Poor Good Great
-##   Poor  1229  393    18
-##   Good   302 1716   180
-##   Great   20  325   715
+##   Poor  1225  401    14
+##   Good   293 1737   168
+##   Great   22  328   710
 ```
 
 Accuracy ~ 0.75
@@ -448,18 +448,60 @@ Well!! The accuracy imporved amaingly! But does it mean that it is the best mode
 
 #### Histogram of Wine Quality:
 
+Firstly, in below plot I will display histogram of wine quality to see how quality is distributed in our dataset.
+
 ![plot of chunk unnamed-chunk-34](figure/unnamed-chunk-34-1.png) 
  
-#### Histogram of Alcohol Percentage:
+The quality rating with highest number is 6. Also we can see that most of wines in our dataset is rated between 5 and 7. 
+
+#### Relationship between Residual Sugar and Density 
+
+To better display relationship between two numerical variable, scatter plot is used:
 
 ![plot of chunk unnamed-chunk-35](figure/unnamed-chunk-35-1.png) 
 
 
+This scatterplot shows that there is a positive relationship between Total Free SO2 in wines and its density. The blue line is drawn using linear regression mothod. 
+
+In EDA section, we calculated the correlation between the two which is *0.53* which suggests a relatively strong positive relationship.
+
+
 #### Is there any relationship between Alcohol percentage and Wine Density? Do these features impact wine rating?
+
+I will show a scatter plot of data using Alcohol percentage and Wine density as x and y axis respectively. Also to understand contribution of the two in wine quality, another dimention (color) is added which is wine rating. 
 
 ![plot of chunk unnamed-chunk-36](figure/unnamed-chunk-36-1.png) 
 
+Above figure is also interesting and it has very useful information about our dataset. As you can see in the scatterplot there is a relationship between *Alcohol Pecentage* and *Wine Density*. The higher the alcohol percentage, the lower is the density. Also in previous section, we found out that the correlation between the two is *-0.78* which relatively suggests a strong negative relationship.
 
+Another useful piece of information in this plot is the relationship between alcholo percentage and wine rating. While left side of the plot consists of red points (Poor Wines), right hand side of the plot mostly consist of Green and Blue points (Good and Great wines). In other words, stronger wines (in trems of alchols) tend to be rated higher. (This will be investigated even more in the next plot)
+ 
+ 
+#### Histogram of Alcohol Percentage and Wine Quality:
+
+I use a stacked bar char to display distribution of wine quality. Also in below chart distribution of alcohol percentage in wines with different quality is displayed:
+
+![plot of chunk unnamed-chunk-37](figure/unnamed-chunk-37-1.png) 
+
+This is such an interesting plot as it conveys a lot. It provides information about the quality of wine, alcohol percentage and also relationship between the two.
+
+Comparing to the previous plot which simply just displayed the histogram of wine quality, in this plot not only we plot the histogram of wine quality, but also we show if alcohol percentage impacts quality of wine. More specifically, based on this plot one can see following points:
+
+1. How data is distributed based on wine quality: most of wine is the dataset is rated 5, 6 and 7. There are very few wines rated below 4 or above 7.
+
+2. Better wines (the ones with higher quality), tend to have higher percentage of alcohol. As you can see in the plot, majority of wines with quality of 5 or lower, are considered as light wines (with low percentage of alcohol), while better wines are stronger in terms of alcohol.
+
+3. One also can see that majority of wines in our dataset is labeled as Mild wines (this plot is not directly intended to show this, but it can be considered as a power of efficient plot, so one can extract more information from a simple plot)
+
+In previous section, we mentioned that correlation between Wine quality and its alcohol percentage is **0.435**.
+
+Note: here is how wines are labeled based on their alcohol percentage:
+
+* Light: Alcohol percentage is below 9.5%
+* Mild: Alcohol percentage is between 9.5 and 12%
+* Strong: Alchol Percentage is more than 12%
+
+ 
 
 ## Reflection
 
@@ -477,6 +519,8 @@ There is defenitely a great room to do further analysis and come with better mod
 * In the last model, we used Random Forest Classification which is very prone to over-fitting. Using seperate train and test data would help to report right number for performance. Also we can use Cross Validation to adjust the parameters of the classification method.
 
 * The only crriteria we used for perfomance was accuracy. While it is indicative of our model's performance, it is not exhaustive yet. A better idea would be to look at the prediction and see how was the prediction are from actual data. For example if a Great wine is predicted as Good, it is more tolerable than if it is predicted as Poor. Therefore we can use weighted accuracy measures to report on performance.
+
+* This is such a rich dataset and many relationship and correlations can be extracted from data and in this project we investigated very obvious relationships between wine qualities and its properties. 
 
 
 ##References
@@ -498,6 +542,4 @@ P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
 2. https://s3.amazonaws.com/udacity-hosted-downloads/ud651/wineQualityInfo.txt
 
 3. https://onlinecourses.science.psu.edu/stat857/node/223
-
-
 
